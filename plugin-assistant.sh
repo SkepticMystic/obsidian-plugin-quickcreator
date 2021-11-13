@@ -7,14 +7,13 @@ read -p 'Path to create new directory in: ' parentPath
 read -p 'Enter plugin id: ' pluginID
 read -p 'Enter plugin name: ' pluginName
 read -p 'Enter plugin description: ' pluginDesc
-read -p 'Enter plugin author: ' pluginAuthor
-read -p 'Enter the initial version of the plugin: ' pluginStartVersion
 
 echo "✅ Variables set"
 
+pluginStartVersion='0.0.1'
 gitProfile=`git config user.name`
+pluginAuthor=$gitProfile
 authorURL="github.com/$gitProfile"
-releaseYmlGist="https://gist.github.com/52cf6dcd326743160c29c959bdad7d94.git"
 
 # Create new folder
 cd "$parentPath"
@@ -26,7 +25,7 @@ echo "✅ Folder created"
 git init
 
 # Create new repo on github based on Obsidian's sample plugin
-gh repo create $pluginID -y -d "${pluginDesc}" --public -p "https://github.com/obsidianmd/obsidian-sample-plugin"
+gh repo create $pluginID -y -d "${pluginDesc}" --public -p "https://github.com/SkepticMystic/plugin-template"
 git pull origin master
 
 echo "✅ Repo created"
@@ -44,12 +43,8 @@ git push origin --delete master
 
 echo "✅ Default set to main"
 
-# Change docs
-echo "✅ # ${pluginID}" > README.md
-echo "✅ Updated readme"
-
 # Find and replace in manifest.json
-findStrings=( "obsidian-sample-plugin" "Sample Plugin" 1.0.1 "This is a sample plugin for Obsidian. This plugin demonstrates some of the capabilities of the Obsidian API." "\"author\": \"Obsidian\"" "\"obsidian.md\"")
+findStrings=( "obsidian-sample-plugin" "Sample Plugin" "1.0.1" "This is a sample plugin for Obsidian." "\"author\": \"Obsidian\"" "\"obsidian.md\"")
 replaceStrings=( $pluginID "$pluginName" $pluginStartVersion "$pluginDesc" "\"author\": \"$pluginAuthor\"" "\"$authorURL\"")
 
 for (( n=0; n<${#findStrings[@]}; n++ ))
@@ -66,7 +61,7 @@ cat manifest.json > manifest-beta.json
 echo "✅ Changed manifest-beta.json"
 
 # Find and replace in package.json
-findStrings=( "obsidian-sample-plugin" "This is a sample plugin for Obsidian (https://obsidian.md)")
+findStrings=( "obsidian-sample-plugin" "This is a sample plugin for Obsidian.")
 replaceStrings=( $pluginID $pluginDesc )
 
 for (( n=0; n<${#findStrings[@]}; n++ ))
@@ -75,15 +70,6 @@ do
 done
 
 echo "✅ Changed package.json"
-
-# Set up github actions: Clone release.yml from github gist
-mkdir -p .github/workflows && cd .github/workflows
-gh gist clone $releaseYmlGist
-
-echo "✅ Clones release.yml"
-
-# Add the plugin id in actions
-sed -i "" "s/FINDME/$pluginID/" release.yml
 
 # Commit all changes!
 cd ../..
